@@ -1,0 +1,5 @@
+﻿glfw-source-package/
+*.zip
+*.swp
+*.out
+
