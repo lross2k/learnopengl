@@ -1,4 +1,4 @@
-﻿#include "figures.h"
+#include "figures.h"
 
 void generate_triangle()
 {
