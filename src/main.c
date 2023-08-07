@@ -18,7 +18,13 @@ unsigned int indices[] = { // note that we start from 0!
 float vertices2[] = {
     1.0f, 0.5f, 0.0f,  // middle right
     1.0f, 1.0f, 0.0f,  // top right
-    0.5f, 0.5f, 0.0f   // top right
+    0.5f, 1.0f, 0.0f   // top right
+};
+
+float vertices3[] = {
+   -1.0f, 0.5f, 0.0f,  // middle left
+   -1.0f, 1.0f, 0.0f,  // far top left
+   -0.5f, 1.0f, 0.0f   // top left
 };
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -84,14 +90,17 @@ int main(void)
     //glBindBuffer(GL_ARRAY_BUFFER, VBO);
     //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Attempting to make another figure in a different VBO   
-    // New Vertex Buffer Object
+    // One triangle with it's own VBO
     unsigned int VBO2;
     glGenBuffers(2, &VBO2);
-    //glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW); // currently using the same data
     unsigned int VAO2;
     glGenVertexArrays(2, &VAO2);
+
+    // Another triangle with it's own VBO
+    unsigned int VBO3;
+    glGenBuffers(3, &VBO3);
+    unsigned int VAO3;
+    glGenVertexArrays(3, &VAO3);
 
     // VertexShader
     unsigned int vertexShader;
@@ -159,13 +168,18 @@ int main(void)
 //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 //    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-    // My initialization
-    // 1. bind Vertex Array Object
+    // One triangle initialization
     glBindVertexArray(VAO2);
-    // 2. copy our vertices array in a vertex buffer for OpenGL to use
     glBindBuffer(GL_ARRAY_BUFFER, VBO2);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
-    // 3. set vertex attibutes pointers
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+    (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Another triangle initialization
+    glBindVertexArray(VAO3);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO3);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices3), vertices3, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
     (void*)0);
     glEnableVertexAttribArray(0);
@@ -204,6 +218,10 @@ int main(void)
 
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO2);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO3);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // check and call events and swap the buffers
