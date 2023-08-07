@@ -4,3 +4,7 @@
 *.out
 # VSCode
 .vscode
+# GLFW source files
+glfw*
+# GLFW built files
+Libs/libglfw3.a
