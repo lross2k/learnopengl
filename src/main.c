@@ -15,6 +15,12 @@ unsigned int indices[] = { // note that we start from 0!
     0, 1, 4  // third triangle
 };
 
+float vertices2[] = {
+    1.0f, 0.5f, 0.0f,  // middle right
+    1.0f, 1.0f, 0.0f,  // top right
+    0.5f, 0.5f, 0.0f   // top right
+};
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -75,8 +81,17 @@ int main(void)
 
     unsigned int VBO;
     glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Attempting to make another figure in a different VBO   
+    // New Vertex Buffer Object
+    unsigned int VBO2;
+    glGenBuffers(2, &VBO2);
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW); // currently using the same data
+    unsigned int VAO2;
+    glGenVertexArrays(2, &VAO2);
 
     // VertexShader
     unsigned int vertexShader;
@@ -141,8 +156,19 @@ int main(void)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
         GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+//    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    // My initialization
+    // 1. bind Vertex Array Object
+    glBindVertexArray(VAO2);
+    // 2. copy our vertices array in a vertex buffer for OpenGL to use
+    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+    // 3. set vertex attibutes pointers
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+    (void*)0);
+    glEnableVertexAttribArray(0);
 
     // ..:: Initialization code :: ..
     // 1. bind Vertex Array Object
@@ -169,13 +195,6 @@ int main(void)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // 4. draw the object
-        //glUseProgram(shaderProgram);
-        //glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // WIREFRAME MODE
-
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         // last parameter is the start index
@@ -183,7 +202,9 @@ int main(void)
         glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0); 
         glBindVertexArray(0);
 
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // FILL MODE
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO2);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // check and call events and swap the buffers
         glfwSwapBuffers(window);
