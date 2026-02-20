@@ -45,7 +45,8 @@ void shader_init(struct shader* shader, const char* vertex_path, const char* fra
 
 	// Vertex file reading
 	FILE* vertex_file;
-	fopen_s(&vertex_file, vertex_path, "rb");
+	//fopen_s(&vertex_file, vertex_path, "rb");
+	vertex_file = fopen(vertex_path, "rb");
 	if (!vertex_file) {
 		printf("ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ\n");
 		return;
@@ -67,7 +68,8 @@ void shader_init(struct shader* shader, const char* vertex_path, const char* fra
 
 	// Fragment file reading
 	FILE* fragment_file;
-	fopen_s(&fragment_file, fragment_path, "rb");
+	//fopen_s(&fragment_file, fragment_path, "rb");
+	fragment_file = fopen(fragment_path, "rb");
 	if (!fragment_file) {
 		printf("ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ\n");
 		return;
@@ -94,7 +96,8 @@ void shader_init(struct shader* shader, const char* vertex_path, const char* fra
 
 	// vertex Shader
 	vertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex, 1, &vertex_code, NULL);
+	const GLchar *vertex_code_final = vertex_code;
+	glShaderSource(vertex, 1, &vertex_code_final, NULL);
 	glCompileShader(vertex);
 	// print compile errors if any
 	glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
@@ -107,7 +110,8 @@ void shader_init(struct shader* shader, const char* vertex_path, const char* fra
 
 	// similiar for Fragment Shader
 	fragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment, 1, &fragment_code, NULL);
+	const GLchar *fragment_code_final = fragment_code;
+	glShaderSource(fragment, 1, &fragment_code_final, NULL);
 	glCompileShader(fragment);
 	// print compile errors if any
 	glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);

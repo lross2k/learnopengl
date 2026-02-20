@@ -3,7 +3,7 @@
 glfw_version='3.3.8'
 
 # Install missing dependecies on debian almost base install
-sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev # Also could install xorg-dev
+#sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev # Also could install xorg-dev
 
 # GLFW stuff
 wget -nc https://github.com/glfw/glfw/releases/download/${glfw_version}/glfw-${glfw_version}.zip

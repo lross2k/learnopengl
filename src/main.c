@@ -106,7 +106,7 @@ int main(void)
     else
     {
         printf("Failed to load texture\n");
-        return;
+        return 1;
     }
     stbi_image_free(data);
 
@@ -127,7 +127,7 @@ int main(void)
     else
     {
         printf("Failed to load texture\n");
-        return;
+        return 1;
     }
     stbi_image_free(data);
 
