@@ -14,6 +14,7 @@ struct shader {
 	void (*setBool)(struct shader* shader, const char* name, bool value);
 	void (*setInt)(struct shader* shader, const char* name, int value);
 	void (*setFloat)(struct shader* shader, const char* name, float value);
+	void (*setMat4)(struct shader* shader, const char* name, float* value);
 };
 
 void shader_use(struct shader* shader)
@@ -36,10 +37,16 @@ void shader_set_float(struct shader* shader, const char* name, float value)
 	glUniform1f(glGetUniformLocation(shader->id, name), value);
 }
 
+void shader_set_mat4(struct shader* shader, const char* name, float* value)
+{
+	glUniformMatrix4fv(glGetUniformLocation(shader->id, name), 1, GL_FALSE, (float*)value);
+}
+
 void shader_init(struct shader* shader, const char* vertex_path, const char* fragment_path)
 {
 	shader->setBool = &shader_set_bool;
 	shader->setFloat = &shader_set_float;
+	shader->setMat4 = &shader_set_mat4;
 	shader->setInt = &shader_set_int;
 	shader->Use = &shader_use;
 

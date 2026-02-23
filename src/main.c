@@ -92,7 +92,7 @@ int main(void)
 	  0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
          -0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
 	 -0.5f,  0.5f, -0.5f, 0.0f, 1.0f
-};
+    };
 
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -146,7 +146,8 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //stbi_set_flip_vertically_on_load(true);
-    data = stbi_load("./resources/awesomeface.png", &width, &height, &nrChannels, 0);
+    //data = stbi_load("./resources/awesomeface.png", &width, &height, &nrChannels, 0);
+    data = stbi_load("./resources/sealion.png", &width, &height, &nrChannels, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -173,6 +174,30 @@ int main(void)
     mat4 model;
     mat4 view;
     mat4 projection;
+
+    float cubePositionsBase[] = {
+        0.0f, 0.0f, 0.0f,
+        2.0f, 5.0f, -15.0f,
+        -1.5f, -2.2f, -2.5f,
+        -3.8f, -2.0f, -12.3f,
+        2.4f, -0.4f, -3.5f,
+        -1.7f, 3.0f, -7.5f,
+        1.3f, -2.0f, -2.5f,
+        1.5f, 2.0f, -2.5f,
+        1.5f, 0.2f, -1.5f,
+        -1.3f, 1.0f, -1.5f
+    };
+
+    vec3 *cubePositions = (vec3*)malloc(sizeof(vec3) * 10);
+
+    int i;
+    for (i = 0; i < 10; i = i + 1)
+    {
+	vec3Src[0] = cubePositionsBase[3*i];
+	vec3Src[1] = cubePositionsBase[3*i + 1];
+	vec3Src[2] = cubePositionsBase[3*i + 2];
+	glm_vec3_make(vec3Src, cubePositions[i]);
+    };
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -231,7 +256,22 @@ int main(void)
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, (float*)projection);
 
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        //glDrawArrays(GL_TRIANGLES, 0, 36);
+	for (unsigned int i = 0; i < 10; i++)
+	{
+            glm_mat4_identity(model);
+	    glm_translate(model, cubePositions[i]);
+	    angle = 20.0f * i;
+            vec3Src[0] = 1.0f;
+            vec3Src[1] = 0.3f;
+            vec3Src[2] = 0.5f;
+            glm_vec3_make(vec3Src, srcVec3);
+            glm_make_rad(&angle);
+	    glm_rotate(model, angle, srcVec3);
+	    ourShader.setMat4(&ourShader, "model", (float*)model);
+
+	    glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
 
         // check and call events and swap the buffers
         glfwSwapBuffers(window);
