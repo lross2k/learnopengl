@@ -9,8 +9,14 @@
 #include "shader.h"
 #include "stb_image.h"
 
+void rzm_glm_vec3_make(float x, float y, float z, vec3 dest)
+{
+    float vec3_src[3] = {x, y, z};
+    glm_vec3_make(vec3_src, dest);
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, vec3 cameraPos, vec3 cameraFront, vec3 cameraUp);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -146,8 +152,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //stbi_set_flip_vertically_on_load(true);
-    //data = stbi_load("./resources/awesomeface.png", &width, &height, &nrChannels, 0);
-    data = stbi_load("./resources/sealion.png", &width, &height, &nrChannels, 0);
+    data = stbi_load("./resources/awesomeface.png", &width, &height, &nrChannels, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -168,12 +173,26 @@ int main(void)
     vec4 vec;
     vec3 srcVec3;
     vec3 vec3Dest;
-    float vec3Src[3] = { 1.0f, 1.0f, 0.0f };
+    vec3 vec3Dest1;
+    vec3 vec3Dest2;
     vec4 dest;
     float angle;
     mat4 model;
     mat4 view;
     mat4 projection;
+    // Camera variables
+    vec3 cameraTarget;
+    vec3 cameraDirection;
+    vec3 up;
+    vec3 cameraRight;
+    float camX;
+    float camZ;
+    const float radius = 10.0f;
+
+    vec3 cameraPos;
+    vec3 cameraFront;
+    vec3 cameraUp;
+    vec3 lookAtAddition;
 
     float cubePositionsBase[] = {
         0.0f, 0.0f, 0.0f,
@@ -193,17 +212,28 @@ int main(void)
     int i;
     for (i = 0; i < 10; i = i + 1)
     {
-	vec3Src[0] = cubePositionsBase[3*i];
-	vec3Src[1] = cubePositionsBase[3*i + 1];
-	vec3Src[2] = cubePositionsBase[3*i + 2];
-	glm_vec3_make(vec3Src, cubePositions[i]);
+	rzm_glm_vec3_make(
+	    cubePositionsBase[3*i], 
+	    cubePositionsBase[3*i + 1], 
+	    cubePositionsBase[3*i + 2], 
+	    cubePositions[i]
+	);
     };
+
+    // Camera preparations
+    rzm_glm_vec3_make(0.0f, 0.0f, 3.0f, cameraPos);
+    rzm_glm_vec3_make(0.0f, 0.0f, -1.0f, cameraFront);
+    rzm_glm_vec3_make(0.0f, 1.0f, 0.0f, cameraUp);
+    //glm_lookat(vec3Dest, vec3Dest1, vec3Dest2, view);
 
     // render loop
     while (!glfwWindowShouldClose(window))
     {
+    	glm_vec3_add(cameraPos, cameraFront, lookAtAddition);
+        glm_lookat(cameraPos, lookAtAddition, cameraUp, view);
+
         // input
-        processInput(window);
+        processInput(window, cameraPos, cameraFront, cameraUp);
 
         // rendering commands here
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -219,24 +249,12 @@ int main(void)
 
         // model matrix for translating and scaling plane
         glm_mat4_identity(model);
-        // preparing pointer
-        vec3Src[0] = 0.5f;
-        vec3Src[1] = 1.0f;
-        vec3Src[2] = 0.0f;
-        glm_vec3_make(vec3Src, vec3Dest);
+        rzm_glm_vec3_make(0.5f, 1.0f, 0.0f, vec3Dest);
         // convert angle in degrees to radians
         angle = -50.0f;
         glm_make_rad(&angle);
         // finally call rotate
         glm_rotate(model, (float)glfwGetTime() * angle, vec3Dest);
-
-        // Now the view, apparently
-        glm_mat4_identity(view);
-        vec3Src[0] = 0.0f;
-        vec3Src[1] = 0.0f;
-        vec3Src[2] = -3.0f;
-        glm_vec3_make(vec3Src, srcVec3);
-        glm_translate(view, srcVec3);
 
         // And the projection matrix
         glm_mat4_identity(projection);
@@ -262,12 +280,9 @@ int main(void)
             glm_mat4_identity(model);
 	    glm_translate(model, cubePositions[i]);
 	    angle = 20.0f * i;
-            vec3Src[0] = 1.0f;
-            vec3Src[1] = 0.3f;
-            vec3Src[2] = 0.5f;
-            glm_vec3_make(vec3Src, srcVec3);
+            rzm_glm_vec3_make(1.0f, 0.3f, 0.5f, vec3Dest);
             glm_make_rad(&angle);
-	    glm_rotate(model, angle, srcVec3);
+	    glm_rotate(model, angle, vec3Dest);
 	    ourShader.setMat4(&ourShader, "model", (float*)model);
 
 	    glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -290,12 +305,51 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, vec3 cameraPos, vec3 cameraFront, vec3 cameraUp)
 {
+    vec3 vec3Temp;
+    const float cameraSpeed = 0.05f;
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, 1);
     if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // WIREFRAME MODE
     if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // FILL MODE
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+	glm_vec3_scale(cameraFront, cameraSpeed, vec3Temp);
+	glm_vec3_add(cameraPos, vec3Temp, cameraPos);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+	glm_vec3_scale(cameraFront, cameraSpeed, vec3Temp);
+	glm_vec3_sub(cameraPos, vec3Temp, cameraPos);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+	glm_vec3_cross(cameraFront, cameraUp, vec3Temp);
+        glm_vec3_normalize(vec3Temp);
+	glm_vec3_scale(vec3Temp, cameraSpeed, vec3Temp);
+	glm_vec3_sub(cameraPos, vec3Temp, cameraPos);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+	glm_vec3_cross(cameraFront, cameraUp, vec3Temp);
+        glm_vec3_normalize(vec3Temp);
+	glm_vec3_scale(vec3Temp, cameraSpeed, vec3Temp);
+	glm_vec3_add(cameraPos, vec3Temp, cameraPos);
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    {
+
+	glm_vec3_scale(cameraUp, cameraSpeed, vec3Temp);
+	glm_vec3_sub(cameraPos, vec3Temp, cameraPos);
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+
+	glm_vec3_scale(cameraUp, cameraSpeed, vec3Temp);
+	glm_vec3_add(cameraPos, vec3Temp, cameraPos);
+    }
 }
