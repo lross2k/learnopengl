@@ -18,6 +18,7 @@ void rzm_glm_vec3_make(float x, float y, float z, vec3 dest)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, vec3 cameraPos, vec3 cameraFront, vec3 cameraUp, float cameraSpeed);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -26,6 +27,7 @@ float lastX = SCR_WIDTH/2, lastY = SCR_HEIGHT/2;
 float pitch = 0.0f;
 float yaw = 0.0f;
 int firstMouse = 1;
+float fov = 45.0f;
 
 int main(void)
 {
@@ -57,6 +59,7 @@ int main(void)
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -280,8 +283,7 @@ int main(void)
 
         // And the projection matrix
         glm_mat4_identity(projection);
-        angle = 45.0f;
-        glm_perspective(glm_rad(angle), SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f, projection);
+        glm_perspective(glm_rad(fov), SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f, projection);
 
         // send matrices to the shader
         // model matrix
@@ -398,5 +400,14 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         pitch = 89.0f;
     if (pitch < -89.0f)
         pitch = -89.0f;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    fov -= (float)yoffset;
+    if (fov < 1.0f)
+	fov = 1.0f;
+    if (fov > 45.0f)
+	fov = 45.0f;
 }
 
